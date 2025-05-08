@@ -2,6 +2,7 @@ package jmp
 
 import (
 	"encoding/json"
+	"errors"
 	"mhfrc/util/byteframe"
 	"mhfrc/util/sjis"
 )
@@ -142,6 +143,10 @@ func CompileJmp(jmpJson []byte) ([]byte, error) {
 	err := json.Unmarshal(jmpJson, &jmp)
 	if err != nil {
 		return []byte{}, err
+	}
+
+	if len(jmp.Jumps) != 24 {
+		return []byte{}, errors.New("must have 24 jumps")
 	}
 
 	bf := byteframe.NewByteFrame()
