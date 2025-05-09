@@ -66,13 +66,13 @@ func DecompileJmp(jmpData []byte) ([]byte, error) {
 			jmp.Jumps[i].Id = bf.ReadUint32()
 			jmp.Jumps[i].Unk = bf.ReadUint32()
 			jmp.Jumps[i].StageIds = make([]uint16, 4)
-			for j := 0; j < 4; j++ {
+			for j := range jmp.Jumps[i].StageIds {
 				jmp.Jumps[i].StageIds[j] = bf.ReadUint16()
 			}
 			jmp.Jumps[i].Destinations = make([]JumpDestination, 2)
-			for j := 0; j < 2; j++ {
+			for j := range jmp.Jumps[i].Destinations {
 				jmp.Jumps[i].Destinations[j].Coordinates = make([]float32, 3)
-				for k := 0; k < 3; k++ {
+				for k := range jmp.Jumps[i].Destinations[j].Coordinates {
 					jmp.Jumps[i].Destinations[j].Coordinates[k] = bf.ReadFloat32()
 				}
 				jmp.Jumps[i].Destinations[j].Rotation = bf.ReadUint32()
@@ -85,7 +85,7 @@ func DecompileJmp(jmpData []byte) ([]byte, error) {
 			_, _ = bf.Seek(int64(ptrDescription), 0)
 			strDescription := sjis.NewBytes(bf.ReadNullTerminatedBytes())
 			jmp.Jumps[i].Description = strDescription.String()
-			_, _ = bf.Seek(int64(ptrJumps)+int64(i*56), 0)
+			_, _ = bf.Seek(int64(ptrJumps)+(int64(i+1)*56), 0)
 		}
 	}
 
@@ -94,13 +94,13 @@ func DecompileJmp(jmpData []byte) ([]byte, error) {
 		return []byte{}, err
 	} else {
 		jmp.Menus = make([]Menu, lenMenus)
-		for i := 0; i < int(lenMenus); i++ {
+		for i := range jmp.Menus {
 			ptrMenuEntries := bf.ReadUint32()
 			lenMenuEntries := bf.ReadUint32()
 			ptrStageIds := bf.ReadUint32()
 			jmp.Menus[i].Entries = make([]MenuEntry, lenMenuEntries)
 			_, _ = bf.Seek(int64(ptrMenuEntries), 0)
-			for j := 0; j < int(lenMenuEntries); j++ {
+			for j := range jmp.Menus[i].Entries {
 				jmp.Menus[i].Entries[j].Index = bf.ReadUint16()
 				jmp.Menus[i].Entries[j].Flags = bf.ReadUint16()
 			}
@@ -112,7 +112,7 @@ func DecompileJmp(jmpData []byte) ([]byte, error) {
 				}
 				jmp.Menus[i].StageIds = append(jmp.Menus[i].StageIds, stageId)
 			}
-			_, _ = bf.Seek(int64(ptrMenus)+int64(i*12), 0)
+			_, _ = bf.Seek(int64(ptrMenus)+(int64(i+1)*12), 0)
 		}
 	}
 
@@ -121,12 +121,12 @@ func DecompileJmp(jmpData []byte) ([]byte, error) {
 		return []byte{}, err
 	} else {
 		jmp.Strings = make([]string, lenStrings)
-		for i := 0; i < int(lenStrings); i++ {
+		for i := range jmp.Strings {
 			ptrString := bf.ReadUint32()
 			_, _ = bf.Seek(int64(ptrString), 0)
 			strString := sjis.NewBytes(bf.ReadNullTerminatedBytes())
 			jmp.Strings[i] = strString.String()
-			_, _ = bf.Seek(int64(ptrStrings)+int64(i*4), 0)
+			_, _ = bf.Seek(int64(ptrStrings)+(int64(i+1)*4), 0)
 		}
 	}
 
