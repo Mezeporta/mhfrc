@@ -139,6 +139,8 @@ func DecompileJmp(jmpData []byte) ([]byte, error) {
 }
 
 func CompileJmp(jmpJson []byte) ([]byte, error) {
+	strings := make(map[string]uint32)
+
 	jmp := Jmp{}
 	err := json.Unmarshal(jmpJson, &jmp)
 	if err != nil {
@@ -158,18 +160,33 @@ func CompileJmp(jmpJson []byte) ([]byte, error) {
 	bf.WriteUint32(0)
 
 	for i := 0; i < len(jmp.Strings); i++ {
-		jmp.ptrStrings = append(jmp.ptrStrings, uint32(bf.Index()))
-		sjisString := sjis.NewString(jmp.Strings[i])
-		bf.WriteBytes(sjisString.Bytes())
+		if _, ok := strings[jmp.Strings[i]]; ok {
+			jmp.ptrStrings = append(jmp.ptrStrings, strings[jmp.Strings[i]])
+		} else {
+			strings[jmp.Strings[i]] = uint32(bf.Index())
+			jmp.ptrStrings = append(jmp.ptrStrings, uint32(bf.Index()))
+			sjisString := sjis.NewString(jmp.Strings[i])
+			bf.WriteBytes(sjisString.Bytes())
+		}
 	}
 
 	for i := 0; i < len(jmp.Jumps); i++ {
-		jmp.Jumps[i].ptrTitle = uint32(bf.Index())
-		sjisTitle := sjis.NewString(jmp.Jumps[i].Title)
-		bf.WriteBytes(sjisTitle.Bytes())
-		jmp.Jumps[i].ptrDescription = uint32(bf.Index())
-		sjisDescription := sjis.NewString(jmp.Jumps[i].Description)
-		bf.WriteBytes(sjisDescription.Bytes())
+		if _, ok := strings[jmp.Jumps[i].Title]; ok {
+			jmp.Jumps[i].ptrTitle = strings[jmp.Jumps[i].Title]
+		} else {
+			strings[jmp.Jumps[i].Title] = uint32(bf.Index())
+			jmp.Jumps[i].ptrTitle = uint32(bf.Index())
+			sjisTitle := sjis.NewString(jmp.Jumps[i].Title)
+			bf.WriteBytes(sjisTitle.Bytes())
+		}
+		if _, ok := strings[jmp.Jumps[i].Description]; ok {
+			jmp.Jumps[i].ptrDescription = strings[jmp.Jumps[i].Description]
+		} else {
+			strings[jmp.Jumps[i].Description] = uint32(bf.Index())
+			jmp.Jumps[i].ptrDescription = uint32(bf.Index())
+			sjisDescription := sjis.NewString(jmp.Jumps[i].Description)
+			bf.WriteBytes(sjisDescription.Bytes())
+		}
 	}
 
 	for i := 0; i < len(jmp.Menus); i++ {
