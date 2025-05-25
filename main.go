@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"hash/crc32"
 	"mhfrc/jmp"
+	"mhfrc/pac"
 	"os"
 )
 
 const (
 	crcJmp = 0xB894E6DF
+	crcPac = 0x6FB2B035
 )
 
 func main() {
@@ -47,6 +49,30 @@ func decompile() {
 				fmt.Printf("Error writing mhfjmp.json: %v\n", err)
 			} else {
 				fmt.Printf("Decompiled mhfjmp.bin to mhfjmp.json\n")
+			}
+		}
+	}
+
+	binPac, err := os.ReadFile("mhfpac.bin")
+	if err != nil {
+		fmt.Printf("Error reading mhfpac.bin: %v\n", err)
+	} else {
+		crc := crc32.ChecksumIEEE(binPac)
+		if crc != crcPac {
+			fmt.Printf("Detected non-vanilla mhfpac.bin\n")
+		} else {
+			fmt.Printf("Detected vanilla mhfpac.bin\n")
+		}
+
+		json, err := pac.DecompilePac(binPac)
+		if err != nil {
+			fmt.Printf("Error decompiling mhfpac.bin: %v\n", err)
+		} else {
+			err = os.WriteFile("mhfpac.json", json, 0644)
+			if err != nil {
+				fmt.Printf("Error writing mhfpac.json: %v\n", err)
+			} else {
+				fmt.Printf("Decompiled mhfpac.bin to mhfpac.json\n")
 			}
 		}
 	}
